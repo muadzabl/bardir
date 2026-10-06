@@ -1,0 +1,10 @@
+# Environment & Logs
+*.log
+.env
+
+# IDE & OS
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
+.DS_Store
