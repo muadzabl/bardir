@@ -539,7 +539,7 @@ $currentUser = getCurrentUser();
                             <table class="w-full text-sm text-left">
                                 <thead class="text-[11px] text-slate-500 uppercase tracking-wider border-b border-em-900/25">
                                     <tr>
-                                        <th class="px-4 py-3 font-semibold">Kode TRX</th>
+                                        <th class="px-4 py-3 font-semibold">No. Resi</th>
                                         <th class="px-4 py-3 font-semibold">Waktu</th>
                                         <th class="px-4 py-3 font-semibold">Kasir</th>
                                         <th class="px-4 py-3 font-semibold">Kapster</th>
@@ -587,7 +587,7 @@ $currentUser = getCurrentUser();
                                 <thead class="text-[11px] text-slate-500 uppercase tracking-wider border-b border-em-900/25">
                                     <tr>
                                         <th class="px-3 py-3 font-semibold">Waktu</th>
-                                        <th class="px-3 py-3 font-semibold">Kode TRX</th>
+                                        <th class="px-3 py-3 font-semibold">No. Resi</th>
                                         <th class="px-3 py-3 font-semibold">Kapster</th>
                                         <th class="px-3 py-3 font-semibold">Layanan</th>
                                         <th class="px-3 py-3 font-semibold text-right">Harga</th>
@@ -814,11 +814,11 @@ $currentUser = getCurrentUser();
                 <i data-lucide="scissors" class="w-6 h-6 mx-auto mb-1 text-slate-700"></i>
                 <h2 class="text-base font-black uppercase tracking-widest text-slate-900">BARDIR</h2>
                 <p class="text-[10px] text-slate-500 font-semibold">Executive Grooming & Barbershop</p>
-                <p class="text-[9px] text-slate-500 mt-0.5">Jl. Barbershop No. 1, Kota Anda</p>
+                <p class="text-[9px] text-slate-500 mt-0.5 leading-relaxed">Jl. Tri Brata, Klitren, Kec. Gondokusuman, Kota Yogyakarta, Daerah Istimewa Yogyakarta 55212</p>
                 <p class="text-[9px] text-slate-500">WA: 0812-3456-7890</p>
             </div>
             <div class="text-[10px] space-y-0.5 border-b border-dashed border-slate-300 pb-2">
-                <div class="flex justify-between"><span class="text-slate-500">No. TRX:</span><span class="font-bold text-slate-800" id="rcpt-code">-</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">No. Resi:</span><span class="font-bold text-slate-800" id="rcpt-code">-</span></div>
                 <div class="flex justify-between"><span class="text-slate-500">Waktu:</span><span id="rcpt-date">-</span></div>
                 <div class="flex justify-between"><span class="text-slate-500">Kasir:</span><span class="font-medium" id="rcpt-cashier">-</span></div>
                 <div class="flex justify-between"><span class="text-slate-500">Metode:</span><span class="font-bold uppercase text-slate-800" id="rcpt-method">-</span></div>

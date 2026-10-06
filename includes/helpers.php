@@ -50,23 +50,18 @@ function requireRole(string $role): array {
 }
 
 /**
- * Generate unique transaction invoice code (e.g. TRX-20261005-001)
+ * Generate unique random receipt number (No. Resi)
+ * Format: RESI-XXXXXX (e.g. RESI-583921) - random, tidak rumit, dan dijamin unik
  */
 function generateTransactionCode(PDO $db): string {
-    $todayPrefix = 'TRX-' . date('Ymd') . '-';
-    $stmt = $db->prepare("SELECT transaction_code FROM transactions WHERE transaction_code LIKE ? ORDER BY id DESC LIMIT 1");
-    $stmt->execute([$todayPrefix . '%']);
-    $lastTrx = $stmt->fetch();
+    do {
+        $randomNum = mt_rand(100000, 999999);
+        $code = 'RESI-' . $randomNum;
+        $stmt = $db->prepare("SELECT id FROM transactions WHERE transaction_code = ? LIMIT 1");
+        $stmt->execute([$code]);
+    } while ($stmt->fetch());
 
-    if ($lastTrx) {
-        $parts = explode('-', $lastTrx['transaction_code']);
-        $lastSeq = (int)end($parts);
-        $newSeq = str_pad($lastSeq + 1, 3, '0', STR_PAD_LEFT);
-    } else {
-        $newSeq = '001';
-    }
-
-    return $todayPrefix . $newSeq;
+    return $code;
 }
 
 /**
