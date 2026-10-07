@@ -50,6 +50,13 @@ function requireRole(string $role): array {
 }
 
 /**
+ * Require owner role - shortcut
+ */
+function requireOwnerAuth(): array {
+    return requireRole('owner');
+}
+
+/**
  * Generate unique random receipt number (No. Resi)
  * Format: RESI-XXXXXX (e.g. RESI-583921) - random, tidak rumit, dan dijamin unik
  */

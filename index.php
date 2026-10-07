@@ -221,15 +221,60 @@ $currentUser = getCurrentUser();
 
         /* ── Print ── */
         @media print {
-            body * { visibility: hidden; }
-            #printable-receipt-area, #printable-receipt-area * { visibility: visible; }
-            #printable-receipt-area {
-                position: absolute; left: 0; top: 0;
-                width: 100%; max-width: 80mm;
-                margin: 0; padding: 12px;
-                color: #000 !important; background: #fff !important;
+            body {
+                background: #fff !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
-            .no-print { display: none !important; }
+            body * {
+                visibility: hidden;
+            }
+            #receiptModal {
+                visibility: visible !important;
+                position: absolute !important;
+                left: 0 !important;
+                right: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: flex-start !important;
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            #receiptModal .modal-box {
+                position: static !important;
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                width: 100% !important;
+                max-width: 80mm !important;
+                margin: 0 auto !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                max-height: none !important;
+            }
+            #printable-receipt-area,
+            #printable-receipt-area * {
+                visibility: visible !important;
+            }
+            #printable-receipt-area {
+                position: relative !important;
+                margin: 0 auto !important;
+                width: 100% !important;
+                max-width: 80mm !important;
+                padding: 12px !important;
+                color: #000 !important;
+                background: #fff !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
         }
 
         /* ── Stat badge color helpers ── */
@@ -302,7 +347,7 @@ $currentUser = getCurrentUser();
                     class="text-xs font-semibold py-2 px-3 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-400 hover:bg-amber-500/20 transition flex items-center justify-center gap-1.5">
                     <i data-lucide="crown" class="w-3.5 h-3.5"></i> Owner
                 </button>
-                <button onclick="fillLogin('cashier@barberos.local','password123')"
+                <button onclick="fillLogin('baba@gmail.com','password123')"
                     class="text-xs font-semibold py-2 px-3 rounded-lg bg-em-500/10 border border-em-500/25 text-em-400 hover:bg-em-500/20 transition flex items-center justify-center gap-1.5">
                     <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Kasir
                 </button>
@@ -380,6 +425,10 @@ $currentUser = getCurrentUser();
                     class="nav-btn nav-inactive w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition">
                     <i data-lucide="receipt" class="w-4 h-4 shrink-0"></i> Transaksi
                 </button>
+                <button onclick="switchTab('queue')" id="nav-queue"
+                    class="nav-btn nav-inactive w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition">
+                    <i data-lucide="list-ordered" class="w-4 h-4 shrink-0"></i> Antrean
+                </button>
                 <button onclick="switchTab('payroll')" id="nav-payroll"
                     class="nav-btn nav-inactive w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition">
                     <i data-lucide="wallet" class="w-4 h-4 shrink-0"></i> Payroll
@@ -396,6 +445,10 @@ $currentUser = getCurrentUser();
                     <button onclick="switchTab('barbers')" id="nav-barbers"
                         class="nav-btn nav-inactive w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition">
                         <i data-lucide="users" class="w-4 h-4 shrink-0"></i> Kapster
+                    </button>
+                    <button onclick="switchTab('stock')" id="nav-stock"
+                        class="nav-btn nav-inactive w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition">
+                        <i data-lucide="package" class="w-4 h-4 shrink-0"></i> Stok Produk
                     </button>
                     <button onclick="switchTab('users')" id="nav-users"
                         class="nav-btn nav-inactive w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition">
@@ -529,9 +582,14 @@ $currentUser = getCurrentUser();
                             <h2 class="text-lg font-bold text-white">Riwayat Transaksi</h2>
                             <p class="text-xs text-slate-400 mt-0.5">Audit trail seluruh transaksi kasir</p>
                         </div>
-                        <button onclick="openModal('posModal')" class="btn-primary text-xs">
-                            <i data-lucide="plus" class="w-4 h-4"></i> Transaksi Baru
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="exportTransactionsCSV()" class="btn-ghost text-xs" title="Export Transaksi ke CSV">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export CSV
+                            </button>
+                            <button onclick="openModal('posModal')" class="btn-primary text-xs">
+                                <i data-lucide="plus" class="w-4 h-4"></i> Transaksi Baru
+                            </button>
+                        </div>
                     </div>
 
                     <div class="card overflow-hidden">
@@ -572,6 +630,12 @@ $currentUser = getCurrentUser();
                             <input type="date" id="payroll-end" class="input-field w-auto text-xs py-2 px-3">
                             <button onclick="loadPayroll()" class="btn-primary text-xs">
                                 <i data-lucide="calculator" class="w-3.5 h-3.5"></i> Hitung
+                            </button>
+                            <button onclick="exportPayrollCSV()" class="btn-ghost text-xs" title="Export ke CSV/Excel">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> CSV
+                            </button>
+                            <button onclick="exportPayrollPrint()" class="btn-ghost text-xs" title="Print/PDF Laporan">
+                                <i data-lucide="printer" class="w-3.5 h-3.5"></i> PDF
                             </button>
                         </div>
                     </div>
@@ -681,6 +745,97 @@ $currentUser = getCurrentUser();
                     </div>
                 </section>
 
+                <!-- ======= ANTREAN ======= -->
+                <section id="view-queue" class="tab-view space-y-4 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-lg font-bold text-white">Manajemen Antrean</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Kelola antrean pelanggan hari ini secara real-time</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="loadQueue()" class="btn-ghost text-xs">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh
+                            </button>
+                            <button onclick="openQueueModal()" class="btn-primary text-xs">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i> Tambah Antrean
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Queue Stats -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="queue-stats-row">
+                        <div class="card p-3 text-center">
+                            <p class="text-2xl font-black text-amber-400" id="q-stat-waiting">0</p>
+                            <p class="text-[11px] text-slate-500 mt-1 font-semibold uppercase tracking-wider">Menunggu</p>
+                        </div>
+                        <div class="card p-3 text-center">
+                            <p class="text-2xl font-black text-em-400" id="q-stat-serving">0</p>
+                            <p class="text-[11px] text-slate-500 mt-1 font-semibold uppercase tracking-wider">Dilayani</p>
+                        </div>
+                        <div class="card p-3 text-center">
+                            <p class="text-2xl font-black text-sky-400" id="q-stat-done">0</p>
+                            <p class="text-[11px] text-slate-500 mt-1 font-semibold uppercase tracking-wider">Selesai</p>
+                        </div>
+                        <div class="card p-3 text-center">
+                            <p class="text-2xl font-black text-slate-500" id="q-stat-skipped">0</p>
+                            <p class="text-[11px] text-slate-500 mt-1 font-semibold uppercase tracking-wider">Dilewati</p>
+                        </div>
+                    </div>
+
+                    <!-- Queue List -->
+                    <div class="space-y-2" id="queue-list-container">
+                        <p class="text-xs text-slate-500 text-center py-8">Memuat antrean...</p>
+                    </div>
+                </section>
+
+                <!-- ======= STOK PRODUK ======= -->
+                <section id="view-stock" class="tab-view space-y-4 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-lg font-bold text-white">Stok Produk</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Kelola inventaris produk &amp; bahan barbershop</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="exportStockCSV()" class="btn-ghost text-xs">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Export CSV
+                            </button>
+                            <button onclick="openStockModal()" class="btn-primary text-xs owner-only">
+                                <i data-lucide="plus" class="w-4 h-4"></i> Tambah Produk
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Low stock alert -->
+                    <div id="stock-alert-banner" class="hidden items-center gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-semibold">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+                        <span id="stock-alert-text">Beberapa produk mendekati stok minimum!</span>
+                    </div>
+
+                    <!-- Stock Table -->
+                    <div class="card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-[11px] text-slate-500 uppercase tracking-wider border-b border-em-900/25">
+                                    <tr>
+                                        <th class="px-4 py-3 font-semibold">Nama Produk</th>
+                                        <th class="px-4 py-3 font-semibold">Kategori</th>
+                                        <th class="px-4 py-3 font-semibold text-center">Stok</th>
+                                        <th class="px-4 py-3 font-semibold text-center">Min.</th>
+                                        <th class="px-4 py-3 font-semibold text-center">Satuan</th>
+                                        <th class="px-4 py-3 font-semibold text-right">Harga Beli</th>
+                                        <th class="px-4 py-3 font-semibold text-right">Harga Jual</th>
+                                        <th class="px-4 py-3 font-semibold text-center">Status</th>
+                                        <th class="px-4 py-3 font-semibold text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stock-table-body" class="divide-y divide-em-900/15 text-slate-300 text-xs">
+                                    <tr><td colspan="9" class="text-center py-8 text-slate-500">Memuat...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
             </div><!-- /inner container -->
         </main>
     </div><!-- /flex -->
@@ -693,14 +848,14 @@ $currentUser = getCurrentUser();
         <button onclick="switchTab('transactions')" id="mob-nav-transactions" class="bottom-nav-item">
             <i data-lucide="receipt" class="w-5 h-5"></i> Transaksi
         </button>
+        <button onclick="switchTab('queue')" id="mob-nav-queue" class="bottom-nav-item">
+            <i data-lucide="list-ordered" class="w-5 h-5"></i> Antrean
+        </button>
         <button onclick="switchTab('payroll')" id="mob-nav-payroll" class="bottom-nav-item">
             <i data-lucide="wallet" class="w-5 h-5"></i> Payroll
         </button>
-        <button onclick="switchTab('services')" id="mob-nav-services" class="bottom-nav-item mob-owner-nav">
-            <i data-lucide="tag" class="w-5 h-5"></i> Layanan
-        </button>
-        <button onclick="switchTab('barbers')" id="mob-nav-barbers" class="bottom-nav-item mob-owner-nav">
-            <i data-lucide="users" class="w-5 h-5"></i> Kapster
+        <button onclick="switchTab('stock')" id="mob-nav-stock" class="bottom-nav-item mob-owner-nav">
+            <i data-lucide="package" class="w-5 h-5"></i> Stok
         </button>
     </nav>
 
@@ -815,7 +970,7 @@ $currentUser = getCurrentUser();
                 <h2 class="text-base font-black uppercase tracking-widest text-slate-900">BARDIR</h2>
                 <p class="text-[10px] text-slate-500 font-semibold">Executive Grooming & Barbershop</p>
                 <p class="text-[9px] text-slate-500 mt-0.5 leading-relaxed">Jl. Tri Brata, Klitren, Kec. Gondokusuman, Kota Yogyakarta, Daerah Istimewa Yogyakarta 55212</p>
-                <p class="text-[9px] text-slate-500">WA: 0812-3456-7890</p>
+                <p class="text-[9px] text-slate-500">WA: 085333787346</p>
             </div>
             <div class="text-[10px] space-y-0.5 border-b border-dashed border-slate-300 pb-2">
                 <div class="flex justify-between"><span class="text-slate-500">No. Resi:</span><span class="font-bold text-slate-800" id="rcpt-code">-</span></div>
@@ -831,7 +986,7 @@ $currentUser = getCurrentUser();
             </div>
             <div class="text-center pt-1 space-y-0.5">
                 <p class="text-[10px] font-black uppercase tracking-wider text-slate-800">TERIMA KASIH!</p>
-                <p class="text-[9px] text-slate-500">Stay Sharp, Stay Confident!</p>
+                <p class="text-[9px] text-slate-500 font-semibold tracking-wider">LEMBO ADE</p>
             </div>
         </div>
         <div class="p-3 border-t border-em-900/25 flex justify-between items-center no-print bg-[#0f1c16]">
@@ -926,6 +1081,88 @@ $currentUser = getCurrentUser();
     </div>
 </div>
 
+<!-- ================= MODAL: TAMBAH ANTREAN ================= -->
+<div id="queueModal" class="modal-overlay">
+    <div class="modal-box modal-box-md p-5 space-y-4">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i data-lucide="list-ordered" class="w-4 h-4 text-em-400"></i> Tambah Antrean
+        </h3>
+        <form onsubmit="handleSaveQueue(event)" class="space-y-3">
+            <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Nama Pelanggan</label>
+                <input type="text" id="queue-customer-name" required placeholder="Contoh: Pak Budi" class="input-field"></div>
+            <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Pilih Kapster (Opsional)</label>
+                <select id="queue-barber-id" class="input-field">
+                    <option value="">— Terserah / Siapa saja —</option>
+                </select></div>
+            <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Catatan Layanan</label>
+                <input type="text" id="queue-service-note" placeholder="Contoh: Potong + cat rambut" class="input-field"></div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeModal('queueModal')" class="btn-ghost text-xs">Batal</button>
+                <button type="submit" class="btn-primary text-xs">Tambah ke Antrean</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= MODAL: STOK PRODUK ================= -->
+<div id="stockModal" class="modal-overlay">
+    <div class="modal-box modal-box-md p-5 space-y-4">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2" id="stock-modal-title">
+            <i data-lucide="package" class="w-4 h-4 text-em-400"></i> Kelola Produk
+        </h3>
+        <form onsubmit="handleSaveStock(event)" class="space-y-3">
+            <input type="hidden" id="stock-id">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2"><label class="block text-xs text-slate-400 mb-1.5 font-medium">Nama Produk</label>
+                    <input type="text" id="stock-name" required placeholder="Contoh: Pomade Water Based" class="input-field"></div>
+                <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Kategori</label>
+                    <input type="text" id="stock-category" placeholder="Pomade & Styling" class="input-field"></div>
+                <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Satuan</label>
+                    <input type="text" id="stock-unit" placeholder="pcs / botol / pack" class="input-field"></div>
+                <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Stok Saat Ini</label>
+                    <input type="number" id="stock-qty" min="0" required placeholder="0" class="input-field"></div>
+                <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Stok Minimum (Alert)</label>
+                    <input type="number" id="stock-min" min="0" required placeholder="5" class="input-field"></div>
+                <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Harga Beli (Rp)</label>
+                    <input type="number" id="stock-buy-price" min="0" step="500" placeholder="0" class="input-field text-violet-400 font-semibold"></div>
+                <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Harga Jual (Rp, opsional)</label>
+                    <input type="number" id="stock-sell-price" min="0" step="500" placeholder="0" class="input-field text-em-400 font-semibold"></div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeModal('stockModal')" class="btn-ghost text-xs">Batal</button>
+                <button type="submit" class="btn-primary text-xs">Simpan Produk</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================= MODAL: ADJUST STOK ================= -->
+<div id="adjustStockModal" class="modal-overlay">
+    <div class="modal-box modal-box-md p-5 space-y-4">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i data-lucide="arrow-up-down" class="w-4 h-4 text-em-400"></i> Update Stok
+        </h3>
+        <p class="text-xs text-slate-400" id="adjust-stock-product-name">Produk: -</p>
+        <form onsubmit="handleAdjustStock(event)" class="space-y-3">
+            <input type="hidden" id="adjust-stock-id">
+            <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Perubahan Stok</label>
+                <div class="flex gap-2 items-center">
+                    <button type="button" onclick="setAdjustSign(-1)" id="btn-adjust-minus" class="px-3 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 font-bold text-sm hover:bg-rose-500/20 transition">− Keluar</button>
+                    <input type="number" id="adjust-qty" min="1" required placeholder="Jumlah" class="input-field flex-1 text-center font-bold">
+                    <button type="button" onclick="setAdjustSign(1)" id="btn-adjust-plus" class="px-3 py-2 rounded-xl border border-em-500/30 bg-em-500/10 text-em-400 font-bold text-sm hover:bg-em-500/20 transition">+ Masuk</button>
+                </div>
+                <input type="hidden" id="adjust-sign" value="1">
+            </div>
+            <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Keterangan</label>
+                <input type="text" id="adjust-note" placeholder="Contoh: Restock dari supplier" class="input-field"></div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeModal('adjustStockModal')" class="btn-ghost text-xs">Batal</button>
+                <button type="submit" class="btn-primary text-xs">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- ================= MODAL: KONFIRMASI MODERN ================= -->
 <div id="confirmModal" class="modal-overlay">
     <div class="modal-box modal-box-md p-6 space-y-5 text-center relative overflow-hidden bg-gradient-to-b from-[#13231c] to-[#0a1410] border border-em-500/20 shadow-2xl shadow-black/80">
@@ -968,6 +1205,9 @@ $currentUser = getCurrentUser();
     let currentChartPeriod = 'daily';
     let revenueChartInstance = null;
     let customerChartInstance = null;
+    let cachedPayrollData = null;  // for export
+    let cachedStockData   = [];    // for export
+    let adjustStockSign   = 1;     // +1 masuk, -1 keluar
 
     const formatRp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
 
@@ -1218,7 +1458,7 @@ $currentUser = getCurrentUser();
     }
 
     // ── Tab Switching ──
-    const TAB_IDS = ['dashboard','transactions','payroll','services','barbers','users'];
+    const TAB_IDS = ['dashboard','transactions','queue','payroll','services','barbers','stock','users'];
 
     function switchTab(tabId) {
         // Desktop nav
@@ -1245,9 +1485,11 @@ $currentUser = getCurrentUser();
         // Load data
         if (tabId === 'dashboard')    loadDashboard();
         if (tabId === 'transactions') loadTransactions();
+        if (tabId === 'queue')        loadQueue();
         if (tabId === 'payroll')      loadPayroll();
         if (tabId === 'services')     loadServicesCRUD();
         if (tabId === 'barbers')      loadBarbersCRUD();
+        if (tabId === 'stock')        loadStockCRUD();
         if (tabId === 'users')        loadUsersCRUD();
     }
 
@@ -1562,6 +1804,7 @@ $currentUser = getCurrentUser();
             const result = await res.json();
             if (!result.success) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-rose-400 text-xs">${result.message}</td></tr>`; return; }
             const data = result.data;
+            cachedPayrollData = data;
 
             // Summary cards
             cardsEl.innerHTML = (data.summary || []).map(b => `
@@ -1583,18 +1826,19 @@ $currentUser = getCurrentUser();
             `).join('');
 
             // Detail rows
-            if (!data.details || !data.details.length) {
+            const details = data.details || data.job_details || [];
+            if (!details.length) {
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-500 text-xs">Tidak ada data pada periode ini.</td></tr>`;
                 return;
             }
-            tbody.innerHTML = data.details.map(d => `
+            tbody.innerHTML = details.map(d => `
                 <tr class="hover:bg-em-900/10 transition">
                     <td class="px-3 py-3 text-slate-400">${d.created_at}</td>
                     <td class="px-3 py-3 font-mono text-em-500">${d.transaction_code}</td>
                     <td class="px-3 py-3 text-slate-300">${d.barber_name}</td>
                     <td class="px-3 py-3 text-slate-300">${d.service_name}</td>
                     <td class="px-3 py-3 text-right text-slate-200">${formatRp(d.service_price)}</td>
-                    <td class="px-3 py-3 text-right font-bold text-violet-400">${formatRp(d.commission_amount)}</td>
+                    <td class="px-3 py-3 text-right font-bold text-violet-400">${formatRp(d.commission_amount || d.barber_commission_amount || 0)}</td>
                 </tr>
             `).join('');
         } catch (e) { tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-rose-400 text-xs">Gagal memuat payroll.</td></tr>`; }
@@ -1880,6 +2124,661 @@ $currentUser = getCurrentUser();
             loadUsersCRUD();
         } else {
             showToast(result.message || 'Gagal menghapus akun.', 'error');
+        }
+    }
+
+    // ── Utilities: HTML & Quote Escape & CSV Download ──
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function escapeQuote(str) {
+        if (!str) return '';
+        return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function downloadCSVFile(content, filename) {
+        const blob = new Blob(["\uFEFF" + content], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // ── Queue Management ──
+    let cachedQueueData = [];
+
+    async function loadQueue() {
+        const container = document.getElementById('queue-list-container');
+        if (!container) return;
+        try {
+            const res = await fetch('api/queue.php');
+            const result = await res.json();
+            if (!result.success) {
+                container.innerHTML = `<p class="text-xs text-rose-400 text-center py-6">${result.message}</p>`;
+                return;
+            }
+            cachedQueueData = result.data.queue || [];
+            const stats = result.data.stats || { waiting: 0, serving: 0, done: 0, skipped: 0 };
+
+            document.getElementById('q-stat-waiting').innerText = stats.waiting;
+            document.getElementById('q-stat-serving').innerText = stats.serving;
+            document.getElementById('q-stat-done').innerText    = stats.done;
+            document.getElementById('q-stat-skipped').innerText = stats.skipped;
+
+            if (cachedQueueData.length === 0) {
+                container.innerHTML = `
+                    <div class="card p-8 text-center">
+                        <div class="w-12 h-12 mx-auto rounded-2xl bg-em-500/10 border border-em-500/20 text-em-400 flex items-center justify-center mb-3">
+                            <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="text-sm font-semibold text-white">Tidak Ada Antrean Hari Ini</h4>
+                        <p class="text-xs text-slate-500 mt-1">Klik tombol "+ Tambah Antrean" untuk memasukkan antrean pelanggan baru.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = cachedQueueData.map(q => {
+                const statusBadges = {
+                    waiting: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">⏳ Menunggu</span>',
+                    serving: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-em-500/20 text-em-400 border border-em-500/40 animate-pulse">✂️ Sedang Dilayani</span>',
+                    done:    '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30">✅ Selesai</span>',
+                    skipped: '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-700/40 text-slate-400 border border-slate-700">⏭️ Dilewati</span>'
+                };
+                const badge = statusBadges[q.status] || q.status;
+                const timeStr = q.created_at ? q.created_at.split(' ')[1]?.substring(0,5) || '' : '';
+
+                let actionBtns = '';
+                if (q.status === 'waiting') {
+                    actionBtns = `
+                        <button onclick="updateQueueStatus(${q.id}, 'serving')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-em-500 text-slate-950 hover:bg-em-400 transition flex items-center gap-1.5 shadow-md shadow-em-950/40">
+                            <i data-lucide="scissors" class="w-3.5 h-3.5"></i> Panggil / Layani
+                        </button>
+                        <button onclick="updateQueueStatus(${q.id}, 'skipped')" class="btn-ghost text-xs text-slate-400 hover:text-amber-400" title="Lewati">
+                            <i data-lucide="skip-forward" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="deleteQueue(${q.id})" class="btn-ghost text-xs text-slate-400 hover:text-rose-400" title="Hapus">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    `;
+                } else if (q.status === 'serving') {
+                    actionBtns = `
+                        <button onclick="serveQueueInPOS(${q.id}, '${escapeQuote(q.customer_name)}', ${q.barber_id || 'null'})" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-violet-600 text-white hover:bg-violet-500 transition flex items-center gap-1.5">
+                            <i data-lucide="receipt" class="w-3.5 h-3.5"></i> Kasir / Checkout
+                        </button>
+                        <button onclick="updateQueueStatus(${q.id}, 'done')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 text-white hover:bg-sky-500 transition flex items-center gap-1.5">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i> Selesai
+                        </button>
+                    `;
+                } else if (q.status === 'skipped') {
+                    actionBtns = `
+                        <button onclick="updateQueueStatus(${q.id}, 'waiting')" class="btn-ghost text-xs text-amber-400 hover:text-amber-300" title="Panggil Ulang">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Antrekan Lagi
+                        </button>
+                        <button onclick="deleteQueue(${q.id})" class="btn-ghost text-xs text-slate-400 hover:text-rose-400" title="Hapus">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    `;
+                } else if (q.status === 'done') {
+                    actionBtns = `
+                        <span class="text-xs text-slate-500 font-medium">Tuntas</span>
+                        <button onclick="deleteQueue(${q.id})" class="btn-ghost text-xs text-slate-500 hover:text-rose-400" title="Hapus">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    `;
+                }
+
+                return `
+                    <div class="card p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-em-500/30 transition">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-12 h-12 rounded-xl bg-bg-deep border border-em-900/30 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-[10px] text-slate-500 font-semibold uppercase leading-none">No</span>
+                                <span class="text-lg font-black text-white leading-none mt-0.5">#${String(q.queue_number).padStart(2, '0')}</span>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h4 class="text-sm font-bold text-white">${escapeHtml(q.customer_name)}</h4>
+                                    ${badge}
+                                </div>
+                                <div class="flex items-center gap-3 text-xs text-slate-400 mt-1 flex-wrap">
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="user" class="w-3 h-3 text-slate-500"></i>
+                                        Kapster: <strong class="text-slate-300">${escapeHtml(q.barber_name || 'Bebas / Siapa Saja')}</strong>
+                                    </span>
+                                    ${q.service_note ? `<span class="flex items-center gap-1 text-slate-500">• <span>${escapeHtml(q.service_note)}</span></span>` : ''}
+                                    ${timeStr ? `<span class="text-slate-500 text-[11px] font-mono">⏰ ${timeStr}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 self-end sm:self-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-em-900/20 w-full sm:w-auto justify-end">
+                            ${actionBtns}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        } catch (e) {
+            container.innerHTML = `<p class="text-xs text-rose-400 text-center py-6">Gagal memuat data antrean.</p>`;
+        }
+    }
+
+    function openQueueModal() {
+        const sel = document.getElementById('queue-barber-id');
+        if (sel) {
+            sel.innerHTML = '<option value="">— Terserah / Siapa saja —</option>' +
+                cachedBarbers.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+        }
+        document.getElementById('queue-customer-name').value = '';
+        document.getElementById('queue-service-note').value   = '';
+        openModal('queueModal');
+        lucide.createIcons();
+    }
+
+    async function handleSaveQueue(e) {
+        e.preventDefault();
+        const payload = {
+            customer_name: document.getElementById('queue-customer-name').value.trim(),
+            barber_id:     document.getElementById('queue-barber-id').value || null,
+            service_note:  document.getElementById('queue-service-note').value.trim()
+        };
+        try {
+            const res = await fetch('api/queue.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (result.success) {
+                closeModal('queueModal');
+                showToast(`Antrean #${result.data.queue_number} (${result.data.customer_name}) berhasil dibuat.`, 'success');
+                loadQueue();
+            } else {
+                showToast(result.message || 'Gagal membuat antrean.', 'error');
+            }
+        } catch (err) {
+            showToast('Gagal menghubungi server.', 'error');
+        }
+    }
+
+    async function updateQueueStatus(id, status) {
+        try {
+            const res = await fetch('api/queue.php', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showToast('Status antrean diperbarui.', 'success');
+                loadQueue();
+            } else {
+                showToast(result.message || 'Gagal mengubah status antrean.', 'error');
+            }
+        } catch (err) {
+            showToast('Gagal mengubah status antrean.', 'error');
+        }
+    }
+
+    async function deleteQueue(id) {
+        const confirmed = await showConfirm({
+            title: 'Hapus Antrean?',
+            message: 'Pelanggan ini akan dihapus dari antrean hari ini.',
+            icon: 'trash-2',
+            theme: 'rose',
+            okLabel: 'Hapus',
+            cancelLabel: 'Batal'
+        });
+        if (!confirmed) return;
+        try {
+            const res = await fetch('api/queue.php', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showToast('Antrean berhasil dihapus.', 'success');
+                loadQueue();
+            } else {
+                showToast(result.message || 'Gagal menghapus antrean.', 'error');
+            }
+        } catch (err) {
+            showToast('Gagal menghapus antrean.', 'error');
+        }
+    }
+
+    function serveQueueInPOS(queueId, customerName, barberId) {
+        openModal('posModal');
+        const notesEl = document.getElementById('pos-notes');
+        if (notesEl) notesEl.value = `Pelanggan: ${customerName} (Antrean)`;
+        if (barberId) {
+            const sel = document.querySelector('#pos-items-container .barber-select');
+            if (sel) sel.value = barberId;
+        }
+        updateQueueStatus(queueId, 'done');
+    }
+
+    // ── Stock Management ──
+    async function loadStockCRUD() {
+        const tbody = document.getElementById('stock-table-body');
+        const alertBanner = document.getElementById('stock-alert-banner');
+        const alertText   = document.getElementById('stock-alert-text');
+        if (!tbody) return;
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-500 text-xs">Memuat data stok...</td></tr>`;
+
+        try {
+            const res = await fetch('api/stock.php');
+            const result = await res.json();
+            if (!result.success || !result.data) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-rose-400 text-xs">Gagal memuat stok.</td></tr>`;
+                return;
+            }
+            cachedStockData = result.data;
+
+            if (cachedStockData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-500 text-xs">Belum ada data produk stok.</td></tr>`;
+                if (alertBanner) alertBanner.classList.add('hidden');
+                return;
+            }
+
+            // Check low stock
+            const lowItems = cachedStockData.filter(p => Number(p.stock_qty) <= Number(p.min_stock));
+            if (lowItems.length > 0 && alertBanner) {
+                alertBanner.classList.remove('hidden');
+                alertBanner.classList.add('flex');
+                if (alertText) alertText.textContent = `Peringatan: Ada ${lowItems.length} produk yang stoknya menipis atau habis! Segera lakukan restock.`;
+            } else if (alertBanner) {
+                alertBanner.classList.add('hidden');
+                alertBanner.classList.remove('flex');
+            }
+
+            tbody.innerHTML = cachedStockData.map(p => {
+                const qty = Number(p.stock_qty || 0);
+                const min = Number(p.min_stock || 0);
+                let statusBadge = '';
+                let qtyClass = 'text-em-400 font-bold';
+
+                if (qty <= 0) {
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">Habis</span>';
+                    qtyClass = 'text-rose-400 font-black';
+                } else if (qty <= min) {
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">Menipis</span>';
+                    qtyClass = 'text-amber-400 font-bold';
+                } else {
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-em-500/15 text-em-400 border border-em-500/30">Aman</span>';
+                }
+
+                return `
+                    <tr class="hover:bg-em-900/10 transition">
+                        <td class="px-4 py-3 font-semibold text-white">${escapeHtml(p.name)}</td>
+                        <td class="px-4 py-3 text-slate-400">${escapeHtml(p.category || 'Umum')}</td>
+                        <td class="px-4 py-3 text-center ${qtyClass} text-sm">${qty}</td>
+                        <td class="px-4 py-3 text-center text-slate-500 font-mono">${min}</td>
+                        <td class="px-4 py-3 text-center text-slate-400 font-medium">${escapeHtml(p.unit || 'pcs')}</td>
+                        <td class="px-4 py-3 text-right text-violet-400 font-mono">${formatRp(p.buy_price)}</td>
+                        <td class="px-4 py-3 text-right text-em-400 font-mono">${Number(p.sell_price) > 0 ? formatRp(p.sell_price) : '-'}</td>
+                        <td class="px-4 py-3 text-center">${statusBadge}</td>
+                        <td class="px-4 py-3 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button onclick="openAdjustStockModal(${p.id})" class="text-amber-400 hover:text-amber-300 p-1.5 rounded-lg hover:bg-amber-500/10 transition" title="Tambah / Kurang Stok">
+                                    <i data-lucide="arrow-up-down" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="openStockModal(${p.id})" class="text-em-400 hover:text-em-300 p-1.5 rounded-lg hover:bg-em-900/30 transition owner-only" title="Edit Produk">
+                                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteStock(${p.id})" class="text-rose-500 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/10 transition owner-only" title="Hapus Produk">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+            updateUserUI();
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-rose-400 text-xs">Gagal memuat data stok.</td></tr>`;
+        }
+    }
+
+    function openStockModal(productId = null) {
+        const isEdit = productId !== null;
+        const item = isEdit ? cachedStockData.find(x => x.id === productId) : null;
+
+        document.getElementById('stock-modal-title').innerHTML =
+            `<i data-lucide="${isEdit ? 'pencil' : 'package'}" class="w-4 h-4 text-em-400"></i> ${isEdit ? 'Edit Produk' : 'Tambah Produk Baru'}`;
+        document.getElementById('stock-id').value         = item ? item.id : '';
+        document.getElementById('stock-name').value       = item ? item.name : '';
+        document.getElementById('stock-category').value   = item ? item.category : 'Pomade & Styling';
+        document.getElementById('stock-unit').value       = item ? item.unit : 'pcs';
+        document.getElementById('stock-qty').value        = item ? item.stock_qty : '0';
+        document.getElementById('stock-min').value        = item ? item.min_stock : '5';
+        document.getElementById('stock-buy-price').value  = item ? item.buy_price : '0';
+        document.getElementById('stock-sell-price').value = item ? item.sell_price : '0';
+
+        openModal('stockModal');
+        lucide.createIcons();
+    }
+
+    async function handleSaveStock(e) {
+        e.preventDefault();
+        const id = document.getElementById('stock-id').value;
+        const payload = {
+            name:       document.getElementById('stock-name').value.trim(),
+            category:   document.getElementById('stock-category').value.trim(),
+            unit:       document.getElementById('stock-unit').value.trim(),
+            stock_qty:  parseInt(document.getElementById('stock-qty').value) || 0,
+            min_stock:  parseInt(document.getElementById('stock-min').value) || 0,
+            buy_price:  parseFloat(document.getElementById('stock-buy-price').value) || 0,
+            sell_price: parseFloat(document.getElementById('stock-sell-price').value) || 0
+        };
+        if (id) payload.id = parseInt(id);
+
+        try {
+            const res = await fetch('api/stock.php', {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (result.success) {
+                closeModal('stockModal');
+                showToast(id ? 'Data produk berhasil diperbarui.' : 'Produk baru berhasil ditambahkan.', 'success');
+                loadStockCRUD();
+            } else {
+                showToast(result.message || 'Gagal menyimpan produk.', 'error');
+            }
+        } catch (err) {
+            showToast('Gagal menghubungi server.', 'error');
+        }
+    }
+
+    function openAdjustStockModal(productId) {
+        const item = cachedStockData.find(x => x.id === productId);
+        if (!item) return;
+        document.getElementById('adjust-stock-id').value = item.id;
+        document.getElementById('adjust-stock-product-name').textContent = `Produk: ${item.name} (Stok Saat Ini: ${item.stock_qty} ${item.unit})`;
+        document.getElementById('adjust-qty').value = '';
+        document.getElementById('adjust-note').value = '';
+        setAdjustSign(1);
+        openModal('adjustStockModal');
+    }
+
+    function setAdjustSign(sign) {
+        adjustStockSign = sign;
+        const minusBtn = document.getElementById('btn-adjust-minus');
+        const plusBtn  = document.getElementById('btn-adjust-plus');
+        const signEl   = document.getElementById('adjust-sign');
+        if (signEl) signEl.value = sign;
+
+        if (sign === 1) {
+            plusBtn.className  = 'px-3 py-2 rounded-xl border border-em-500 bg-em-500 text-slate-950 font-bold text-sm shadow-md transition cursor-pointer';
+            minusBtn.className = 'px-3 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 font-bold text-sm hover:bg-rose-500/20 transition cursor-pointer';
+        } else {
+            minusBtn.className = 'px-3 py-2 rounded-xl border border-rose-500 bg-rose-500 text-white font-bold text-sm shadow-md transition cursor-pointer';
+            plusBtn.className  = 'px-3 py-2 rounded-xl border border-em-500/30 bg-em-500/10 text-em-400 font-bold text-sm hover:bg-em-500/20 transition cursor-pointer';
+        }
+    }
+
+    async function handleAdjustStock(e) {
+        e.preventDefault();
+        const id   = parseInt(document.getElementById('adjust-stock-id').value);
+        const qty  = parseInt(document.getElementById('adjust-qty').value) || 0;
+        const sign = parseInt(document.getElementById('adjust-sign').value) || 1;
+        const note = document.getElementById('adjust-note').value.trim();
+
+        if (qty <= 0) {
+            showToast('Jumlah perubahan harus lebih dari 0.', 'warning');
+            return;
+        }
+
+        try {
+            const res = await fetch('api/stock.php', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id,
+                    adjust_qty: sign * qty,
+                    note: note || (sign > 0 ? 'Penambahan stok manual' : 'Pengurangan stok manual')
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                closeModal('adjustStockModal');
+                showToast(`Stok berhasil ${sign > 0 ? 'ditambah' : 'dikurangi'} sebanyak ${qty}.`, 'success');
+                loadStockCRUD();
+            } else {
+                showToast(result.message || 'Gagal mengubah stok.', 'error');
+            }
+        } catch (err) {
+            showToast('Gagal menghubungi server.', 'error');
+        }
+    }
+
+    async function deleteStock(id) {
+        const item = cachedStockData.find(x => x.id === id);
+        const confirmed = await showConfirm({
+            title: 'Hapus Produk?',
+            message: `Produk "${item?.name || 'ini'}" akan dihapus permanen dari inventaris.`,
+            icon: 'trash-2',
+            theme: 'rose',
+            okLabel: 'Hapus Produk',
+            cancelLabel: 'Batal'
+        });
+        if (!confirmed) return;
+        try {
+            const res = await fetch('api/stock.php', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            const result = await res.json();
+            if (result.success) {
+                showToast('Produk berhasil dihapus.', 'success');
+                loadStockCRUD();
+            } else {
+                showToast(result.message || 'Gagal menghapus produk.', 'error');
+            }
+        } catch (err) {
+            showToast('Gagal menghubungi server.', 'error');
+        }
+    }
+
+    // ── Export Features ──
+    function exportStockCSV() {
+        if (!cachedStockData || cachedStockData.length === 0) {
+            showToast('Tidak ada data stok untuk diekspor.', 'warning');
+            return;
+        }
+        let csv = 'ID,Nama Produk,Kategori,Stok,Min Stok,Satuan,Harga Beli,Harga Jual,Status\n';
+        cachedStockData.forEach(p => {
+            const status = Number(p.stock_qty) <= 0 ? 'Habis' : (Number(p.stock_qty) <= Number(p.min_stock) ? 'Menipis' : 'Aman');
+            const row = [
+                p.id,
+                `"${(p.name || '').replace(/"/g, '""')}"`,
+                `"${(p.category || '').replace(/"/g, '""')}"`,
+                p.stock_qty,
+                p.min_stock,
+                `"${(p.unit || '').replace(/"/g, '""')}"`,
+                p.buy_price,
+                p.sell_price,
+                status
+            ];
+            csv += row.join(',') + '\n';
+        });
+        downloadCSVFile(csv, `stok_produk_bardir_${new Date().toISOString().split('T')[0]}.csv`);
+        showToast('Export CSV stok berhasil diunduh.', 'success');
+    }
+
+    function exportPayrollCSV() {
+        const details = cachedPayrollData ? (cachedPayrollData.details || cachedPayrollData.job_details || []) : [];
+        if (!cachedPayrollData || details.length === 0) {
+            showToast('Tidak ada data payroll untuk diekspor. Hitung payroll terlebih dahulu.', 'warning');
+            return;
+        }
+        const start = document.getElementById('payroll-start').value || 'start';
+        const end   = document.getElementById('payroll-end').value || 'end';
+
+        let csv = '=== LAPORAN RINCIAN KOMISI & PAYROLL BARDIR ===\n';
+        csv += `Periode: ${start} s/d ${end}\n\n`;
+
+        // Ringkasan per kapster
+        csv += '--- RINGKASAN PER KAPSTER ---\n';
+        csv += 'Nama Kapster,Total Layanan,Total Komisi (Rp)\n';
+        (cachedPayrollData.summary || []).forEach(s => {
+            csv += `"${(s.barber_name || s.name || '').replace(/"/g, '""')}",${s.service_count || s.total_jobs || 0},${s.total_commission || s.total_commission_earned || 0}\n`;
+        });
+        csv += '\n';
+
+        // Rincian transaksi
+        csv += '--- RINCIAN TRANSAKSI ---\n';
+        csv += 'Waktu,No Resi,Kapster,Layanan,Harga Layanan (Rp),Komisi (Rp)\n';
+        details.forEach(d => {
+            csv += `"${d.created_at}","${d.transaction_code}","${(d.barber_name||'').replace(/"/g,'""')}","${(d.service_name||'').replace(/"/g,'""')}",${d.service_price},${d.commission_amount || d.barber_commission_amount || 0}\n`;
+        });
+
+        downloadCSVFile(csv, `laporan_payroll_${start}_sd_${end}.csv`);
+        showToast('Export CSV payroll berhasil diunduh.', 'success');
+    }
+
+    function exportPayrollPrint() {
+        const details = cachedPayrollData ? (cachedPayrollData.details || cachedPayrollData.job_details || []) : [];
+        if (!cachedPayrollData || details.length === 0) {
+            showToast('Tidak ada data payroll untuk dicetak. Hitung payroll terlebih dahulu.', 'warning');
+            return;
+        }
+        const start = document.getElementById('payroll-start').value || '';
+        const end   = document.getElementById('payroll-end').value || '';
+
+        const totalCommissionAll = (cachedPayrollData.summary || []).reduce((acc, c) => acc + Number(c.total_commission || c.total_commission_earned || 0), 0);
+        const totalServicesAll   = (cachedPayrollData.summary || []).reduce((acc, c) => acc + Number(c.service_count || c.total_jobs || 0), 0);
+
+        const printWindow = window.open('', '_blank', 'width=900,height=700');
+        if (!printWindow) {
+            showToast('Gagal membuka jendela cetak. Izinkan popup di browser Anda.', 'error');
+            return;
+        }
+
+        const summaryRows = (cachedPayrollData.summary || []).map(s => `
+            <tr>
+                <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-weight:bold;">${escapeHtml(s.barber_name || s.name)}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:center;">${s.service_count || s.total_jobs || 0}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:bold;color:#7c3aed;">${formatRp(s.total_commission || s.total_commission_earned || 0)}</td>
+            </tr>
+        `).join('');
+
+        const detailRows = details.map(d => `
+            <tr>
+                <td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#64748b;">${d.created_at}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;font-family:monospace;color:#059669;">${d.transaction_code}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;font-weight:500;">${escapeHtml(d.barber_name)}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;">${escapeHtml(d.service_name)}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;text-align:right;">${formatRp(d.service_price)}</td>
+                <td style="padding:6px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;text-align:right;font-weight:bold;color:#7c3aed;">${formatRp(d.commission_amount || d.barber_commission_amount || 0)}</td>
+            </tr>
+        `).join('');
+
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Laporan Komisi & Payroll BARDIR (${start} - ${end})</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1e293b; margin: 24px; }
+                    .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 16px; margin-bottom: 20px; }
+                    .header h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 2px; }
+                    .header p { margin: 3px 0 0; font-size: 11px; color: #64748b; }
+                    .period-badge { display: inline-block; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-top: 8px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    th { background: #f8fafc; padding: 8px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #cbd5e1; text-align: left; }
+                    .total-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 24px; }
+                    @media print {
+                        body { margin: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>BARDIR EXECUTIVE BARBERSHOP</h1>
+                    <p>Jl. Tri Brata, Klitren, Kec. Gondokusuman, Kota Yogyakarta | WA: 085333787346</p>
+                    <div class="period-badge">Laporan Payroll & Komisi: ${start} s/d ${end}</div>
+                </div>
+
+                <h3 style="font-size:13px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;color:#475569;">1. Ringkasan Per Kapster</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama Kapster</th>
+                            <th style="text-align:center;">Jumlah Layanan</th>
+                            <th style="text-align:right;">Total Komisi</th>
+                        </tr>
+                    </thead>
+                    <tbody>${summaryRows}</tbody>
+                </table>
+
+                <div class="total-box">
+                    <span>TOTAL SELURUH KOMISI (${totalServicesAll} Layanan):</span>
+                    <span style="color:#7c3aed;font-size:16px;">${formatRp(totalCommissionAll)}</span>
+                </div>
+
+                <h3 style="font-size:13px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;color:#475569;">2. Rincian Pekerjaan</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>No Resi</th>
+                            <th>Kapster</th>
+                            <th>Layanan</th>
+                            <th style="text-align:right;">Harga</th>
+                            <th style="text-align:right;">Komisi</th>
+                        </tr>
+                    </thead>
+                    <tbody>${detailRows}</tbody>
+                </table>
+
+                <div style="margin-top:30px;padding-top:12px;border-top:1px dashed #cbd5e1;display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;">
+                    <span>Dicetak pada: ${new Date().toLocaleString('id-ID')}</span>
+                    <span>BARDIR Management System</span>
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+        }, 500);
+    }
+
+    async function exportTransactionsCSV() {
+        showToast('Menyiapkan file CSV transaksi...', 'info');
+        try {
+            const res = await fetch('api/transactions.php?limit=500');
+            const result = await res.json();
+            if (!result.success || !result.data || result.data.length === 0) {
+                showToast('Tidak ada transaksi untuk diekspor.', 'warning');
+                return;
+            }
+            let csv = 'No Resi,Waktu,Kasir,Kapster,Metode Pembayaran,Subtotal,Diskon,Total Bayar,Total Komisi\n';
+            result.data.forEach(t => {
+                const barbers = (t.barbers || []).join('; ') || t.barbers_involved || '-';
+                csv += `"${t.transaction_code}","${t.created_at}","${(t.cashier_name||'').replace(/"/g,'""')}","${barbers.replace(/"/g,'""')}","${t.payment_method}",${t.subtotal || t.total_amount},${t.discount_amount || 0},${t.total_amount},${t.total_commission || 0}\n`;
+            });
+            downloadCSVFile(csv, `transaksi_bardir_${new Date().toISOString().split('T')[0]}.csv`);
+            showToast('Export CSV transaksi berhasil diunduh.', 'success');
+        } catch (e) {
+            showToast('Gagal mengekspor transaksi.', 'error');
         }
     }
 
