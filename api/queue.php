@@ -13,9 +13,10 @@ if ($method === 'GET') {
     requireAuth();
     $date = $_GET['date'] ?? date('Y-m-d');
     $stmt = $db->prepare("
-        SELECT q.*, b.name as barber_name
+        SELECT q.*, b.name as barber_name, s.name as service_name, s.price as service_price
         FROM queue q
         LEFT JOIN barbers b ON q.barber_id = b.id
+        LEFT JOIN services s ON q.service_id = s.id
         WHERE DATE(q.created_at) = ?
         ORDER BY q.queue_number ASC
     ");
@@ -38,11 +39,19 @@ if ($method === 'GET') {
 // POST: Tambah antrean baru
 if ($method === 'POST') {
     requireAuth();
-    $input     = json_decode(file_get_contents('php://input'), true) ?? [];
-    $custName  = trim($input['customer_name'] ?? 'Pelanggan');
-    $barberId  = !empty($input['barber_id']) ? (int)$input['barber_id'] : null;
+    $input       = json_decode(file_get_contents('php://input'), true) ?? [];
+    $custName    = trim($input['customer_name'] ?? 'Pelanggan');
+    $barberId    = !empty($input['barber_id']) ? (int)$input['barber_id'] : null;
+    $serviceId   = !empty($input['service_id']) ? (int)$input['service_id'] : null;
     $serviceNote = trim($input['service_note'] ?? '');
-    $date      = date('Y-m-d');
+    $date        = date('Y-m-d');
+
+    // Jika service_note kosong tapi service_id ada, ambil nama layanannya
+    if (empty($serviceNote) && $serviceId) {
+        $stmtS = $db->prepare("SELECT name FROM services WHERE id = ?");
+        $stmtS->execute([$serviceId]);
+        $serviceNote = $stmtS->fetchColumn() ?: '';
+    }
 
     // Hitung nomor antrean hari ini
     $stmtNum = $db->prepare("SELECT COUNT(*) FROM queue WHERE DATE(created_at) = ?");
@@ -50,8 +59,8 @@ if ($method === 'POST') {
     $todayCount = (int)$stmtNum->fetchColumn();
     $queueNum = $todayCount + 1;
 
-    $stmt = $db->prepare("INSERT INTO queue (queue_number, customer_name, barber_id, service_note, status) VALUES (?,?,?,?,'waiting')");
-    $stmt->execute([$queueNum, $custName, $barberId, $serviceNote]);
+    $stmt = $db->prepare("INSERT INTO queue (queue_number, customer_name, barber_id, service_id, service_note, status) VALUES (?,?,?,?,?, 'waiting')");
+    $stmt->execute([$queueNum, $custName, $barberId, $serviceId, $serviceNote]);
 
     sendJsonResponse(true, 'Antrean berhasil ditambahkan.', [
         'id'           => $db->lastInsertId(),

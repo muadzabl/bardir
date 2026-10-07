@@ -35,11 +35,13 @@ CREATE TABLE IF NOT EXISTS `queue` (
     `queue_number` SMALLINT UNSIGNED NOT NULL,
     `customer_name` VARCHAR(100) NOT NULL DEFAULT 'Pelanggan',
     `barber_id` INT UNSIGNED DEFAULT NULL COMMENT 'Kapster yang diminta (opsional)',
+    `service_id` INT UNSIGNED DEFAULT NULL COMMENT 'Layanan yang dipilih (opsional)',
     `service_note` VARCHAR(255) DEFAULT NULL COMMENT 'Catatan layanan yang diminta',
     `status` ENUM('waiting','serving','done','skipped') NOT NULL DEFAULT 'waiting',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_queue_barber` FOREIGN KEY (`barber_id`) REFERENCES `barbers` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT `fk_queue_barber` FOREIGN KEY (`barber_id`) REFERENCES `barbers` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT `fk_queue_service` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Data Stok Awal (Contoh Produk Barbershop)

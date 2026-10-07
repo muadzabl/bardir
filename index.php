@@ -1094,8 +1094,12 @@ $currentUser = getCurrentUser();
                 <select id="queue-barber-id" class="input-field">
                     <option value="">— Terserah / Siapa saja —</option>
                 </select></div>
-            <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Catatan Layanan</label>
-                <input type="text" id="queue-service-note" placeholder="Contoh: Potong + cat rambut" class="input-field"></div>
+            <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Pilih Layanan (Opsional)</label>
+                <select id="queue-service-id" class="input-field">
+                    <option value="">— Pilih Layanan —</option>
+                </select></div>
+            <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Catatan Tambahan (Opsional)</label>
+                <input type="text" id="queue-service-note" placeholder="Contoh: Model undercut / jangan terlalu tipis" class="input-field"></div>
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" onclick="closeModal('queueModal')" class="btn-ghost text-xs">Batal</button>
                 <button type="submit" class="btn-primary text-xs">Tambah ke Antrean</button>
@@ -2213,7 +2217,7 @@ $currentUser = getCurrentUser();
                     `;
                 } else if (q.status === 'serving') {
                     actionBtns = `
-                        <button onclick="serveQueueInPOS(${q.id}, '${escapeQuote(q.customer_name)}', ${q.barber_id || 'null'})" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-violet-600 text-white hover:bg-violet-500 transition flex items-center gap-1.5">
+                        <button onclick="serveQueueInPOS(${q.id}, '${escapeQuote(q.customer_name)}', ${q.barber_id || 'null'}, ${q.service_id || 'null'})" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-violet-600 text-white hover:bg-violet-500 transition flex items-center gap-1.5">
                             <i data-lucide="receipt" class="w-3.5 h-3.5"></i> Kasir / Checkout
                         </button>
                         <button onclick="updateQueueStatus(${q.id}, 'done')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 text-white hover:bg-sky-500 transition flex items-center gap-1.5">
@@ -2238,6 +2242,13 @@ $currentUser = getCurrentUser();
                     `;
                 }
 
+                const serviceDisplay = q.service_name
+                    ? `<span class="flex items-center gap-1 text-em-400 font-medium"><i data-lucide="scissors" class="w-3 h-3"></i> ${escapeHtml(q.service_name)}${q.service_price ? ` <span class="text-slate-400 font-normal text-[11px]">(${formatRp(q.service_price)})</span>` : ''}</span>`
+                    : '';
+                const noteDisplay = (q.service_note && q.service_name && q.service_note !== q.service_name)
+                    ? `<span class="text-slate-400 italic text-[11px]">• "${escapeHtml(q.service_note)}"</span>`
+                    : (q.service_note && !q.service_name ? `<span class="text-slate-400">• ${escapeHtml(q.service_note)}</span>` : '');
+
                 return `
                     <div class="card p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-em-500/30 transition">
                         <div class="flex items-center gap-3.5">
@@ -2255,7 +2266,8 @@ $currentUser = getCurrentUser();
                                         <i data-lucide="user" class="w-3 h-3 text-slate-500"></i>
                                         Kapster: <strong class="text-slate-300">${escapeHtml(q.barber_name || 'Bebas / Siapa Saja')}</strong>
                                     </span>
-                                    ${q.service_note ? `<span class="flex items-center gap-1 text-slate-500">• <span>${escapeHtml(q.service_note)}</span></span>` : ''}
+                                    ${serviceDisplay}
+                                    ${noteDisplay}
                                     ${timeStr ? `<span class="text-slate-500 text-[11px] font-mono">⏰ ${timeStr}</span>` : ''}
                                 </div>
                             </div>
@@ -2272,24 +2284,46 @@ $currentUser = getCurrentUser();
         }
     }
 
-    function openQueueModal() {
-        const sel = document.getElementById('queue-barber-id');
-        if (sel) {
-            sel.innerHTML = '<option value="">— Terserah / Siapa saja —</option>' +
+    async function openQueueModal() {
+        if (!cachedServices.length || !cachedBarbers.length) {
+            await loadCatalogs();
+        }
+        const selBarber = document.getElementById('queue-barber-id');
+        if (selBarber) {
+            selBarber.innerHTML = '<option value="">— Terserah / Siapa saja —</option>' +
                 cachedBarbers.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
         }
+        const selService = document.getElementById('queue-service-id');
+        if (selService) {
+            selService.innerHTML = '<option value="">— Pilih Layanan —</option>' +
+                cachedServices.map(s => `<option value="${s.id}" data-name="${escapeHtml(s.name)}">${escapeHtml(s.name)} • ${formatRp(s.price)}</option>`).join('');
+        }
         document.getElementById('queue-customer-name').value = '';
-        document.getElementById('queue-service-note').value   = '';
+        if (selService) selService.value = '';
+        const noteEl = document.getElementById('queue-service-note');
+        if (noteEl) noteEl.value = '';
         openModal('queueModal');
         lucide.createIcons();
     }
 
     async function handleSaveQueue(e) {
         e.preventDefault();
+        const serviceSel = document.getElementById('queue-service-id');
+        const serviceId = serviceSel ? serviceSel.value : '';
+        const serviceOpt = serviceSel && serviceSel.selectedIndex > 0 ? serviceSel.options[serviceSel.selectedIndex] : null;
+        const noteEl = document.getElementById('queue-service-note');
+        let noteVal = noteEl ? noteEl.value.trim() : '';
+
+        // Jika catatan kosong tapi layanan dipilih, isi catatan dengan nama layanan
+        if (!noteVal && serviceOpt) {
+            noteVal = serviceOpt.dataset.name || serviceOpt.text.split('•')[0].trim();
+        }
+
         const payload = {
             customer_name: document.getElementById('queue-customer-name').value.trim(),
             barber_id:     document.getElementById('queue-barber-id').value || null,
-            service_note:  document.getElementById('queue-service-note').value.trim()
+            service_id:    serviceId ? parseInt(serviceId) : null,
+            service_note:  noteVal
         };
         try {
             const res = await fetch('api/queue.php', {
@@ -2357,13 +2391,20 @@ $currentUser = getCurrentUser();
         }
     }
 
-    function serveQueueInPOS(queueId, customerName, barberId) {
+    function serveQueueInPOS(queueId, customerName, barberId, serviceId) {
         openModal('posModal');
         const notesEl = document.getElementById('pos-notes');
         if (notesEl) notesEl.value = `Pelanggan: ${customerName} (Antrean)`;
         if (barberId) {
             const sel = document.querySelector('#pos-items-container .barber-select');
             if (sel) sel.value = barberId;
+        }
+        if (serviceId) {
+            const sSel = document.querySelector('#pos-items-container .service-select');
+            if (sSel) {
+                sSel.value = serviceId;
+                calculatePosTotal();
+            }
         }
         updateQueueStatus(queueId, 'done');
     }
