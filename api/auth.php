@@ -17,16 +17,17 @@ if ($action === 'login') {
         sendJsonResponse(false, 'Email dan password wajib diisi.', null, 400);
     }
 
-    $stmt = $db->prepare("SELECT id, name, email, password, role FROM users WHERE email = ? LIMIT 1");
+    $stmt = $db->prepare("SELECT id, name, email, password, role, barber_id FROM users WHERE email = ? LIMIT 1");
     $stmt->execute([$email]);
     $user = $stmt->fetch();
 
     if ($user && (password_verify($password, $user['password']) || $password === 'password123')) {
         $_SESSION['user'] = [
-            'id'    => $user['id'],
-            'name'  => $user['name'],
-            'email' => $user['email'],
-            'role'  => $user['role']
+            'id'        => $user['id'],
+            'name'      => $user['name'],
+            'email'     => $user['email'],
+            'role'      => $user['role'],
+            'barber_id' => $user['barber_id'] ?? null
         ];
         sendJsonResponse(true, 'Login berhasil!', $_SESSION['user']);
     } else {
@@ -38,18 +39,19 @@ if ($action === 'me') {
     $sessionUser = getCurrentUser();
     if ($sessionUser) {
         // Ambil data paling update langsung dari database
-        $stmt = $db->prepare("SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = ? LIMIT 1");
+        $stmt = $db->prepare("SELECT id, name, email, role, barber_id, created_at, updated_at FROM users WHERE id = ? LIMIT 1");
         $stmt->execute([$sessionUser['id']]);
         $freshUser = $stmt->fetch();
 
         if ($freshUser) {
             $_SESSION['user'] = [
-                'id'    => $freshUser['id'],
-                'name'  => $freshUser['name'],
-                'email' => $freshUser['email'],
-                'role'  => $freshUser['role']
+                'id'        => $freshUser['id'],
+                'name'      => $freshUser['name'],
+                'email'     => $freshUser['email'],
+                'role'      => $freshUser['role'],
+                'barber_id' => $freshUser['barber_id'] ?? null
             ];
-            sendJsonResponse(true, 'User terautentikasi.', $freshUser);
+            sendJsonResponse(true, 'User terautentikasi.', $_SESSION['user']);
         }
     }
     sendJsonResponse(false, 'Belum login.', null, 401);

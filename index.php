@@ -380,7 +380,7 @@ $currentUser = getCurrentUser();
                 <span class="text-slate-600">·</span>
                 <span id="header-date"><?= date('d M') ?></span>
             </div>
-            <button onclick="openModal('posModal')" class="btn-primary text-xs py-2 px-3">
+            <button id="btn-header-pos" onclick="openModal('posModal')" class="btn-primary text-xs py-2 px-3">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Transaksi</span>
             </button>
@@ -485,8 +485,8 @@ $currentUser = getCurrentUser();
                         </button>
                     </div>
 
-                    <!-- KPI Cards -->
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <!-- ── KPI Cards: OWNER / KASIR ── -->
+                    <div id="kpi-full" class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         <div class="card p-4">
                             <div class="flex items-center justify-between mb-3">
                                 <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Pelanggan</span>
@@ -529,14 +529,38 @@ $currentUser = getCurrentUser();
                         </div>
                     </div>
 
-                    <!-- Charts -->
+                    <!-- ── KPI Cards: KAPSTER (hanya kinerja pribadi) ── -->
+                    <div id="kpi-kapster" class="hidden grid grid-cols-2 gap-3">
+                        <div class="card p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Layanan Saya</span>
+                                <div class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/15 flex items-center justify-center">
+                                    <i data-lucide="scissors" class="w-4 h-4 text-sky-400"></i>
+                                </div>
+                            </div>
+                            <p class="text-2xl font-bold text-white" id="kap-stat-services">0</p>
+                            <p class="text-[11px] text-slate-500 mt-1">Pelanggan dilayani hari ini</p>
+                        </div>
+                        <div class="card p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Komisi Saya</span>
+                                <div class="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/15 flex items-center justify-center">
+                                    <i data-lucide="wallet" class="w-4 h-4 text-violet-400"></i>
+                                </div>
+                            </div>
+                            <p class="text-xl font-bold stat-violet" id="kap-stat-commission">Rp 0</p>
+                            <p class="text-[11px] text-slate-500 mt-1">Akumulasi hari ini</p>
+                        </div>
+                    </div>
+
+                    <!-- Charts (shared canvas, data berbeda per role) -->
                     <div class="card p-4 sm:p-5">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                             <div>
                                 <h3 class="text-sm font-semibold text-white flex items-center gap-2">
                                     <i data-lucide="bar-chart-3" class="w-4 h-4 text-em-400"></i> Analisis Tren
                                 </h3>
-                                <p class="text-[11px] text-slate-500 mt-0.5">Omset & jumlah pelanggan</p>
+                                <p class="text-[11px] text-slate-500 mt-0.5" id="chart-subtitle">Omset &amp; jumlah pelanggan</p>
                             </div>
                             <div class="flex bg-bg-deep rounded-xl p-1 border border-em-900/20 self-start sm:self-auto">
                                 <button onclick="setChartPeriod('daily')" id="btn-period-daily"
@@ -549,7 +573,7 @@ $currentUser = getCurrentUser();
                         </div>
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <div>
-                                <p class="text-[11px] text-slate-500 font-medium mb-2 flex items-center gap-1.5">
+                                <p class="text-[11px] text-slate-500 font-medium mb-2 flex items-center gap-1.5" id="chart-left-label">
                                     <span class="w-2 h-2 rounded-full bg-amber-400"></span> Omset Kotor
                                     <span class="w-2 h-2 rounded-full bg-em-400 ml-1"></span> Bersih Owner
                                 </p>
@@ -557,20 +581,31 @@ $currentUser = getCurrentUser();
                             </div>
                             <div>
                                 <p class="text-[11px] text-slate-500 font-medium mb-2 flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-sky-400"></span> Volume Pelanggan
+                                    <span class="w-2 h-2 rounded-full bg-sky-400"></span> <span id="chart-right-label-text">Volume Pelanggan</span>
                                 </p>
                                 <div class="h-52"><canvas id="customerChartCanvas"></canvas></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Barber leaderboard -->
-                    <div class="card p-4 sm:p-5">
+                    <!-- Barber leaderboard (owner/kasir only) -->
+                    <div id="barber-leaderboard" class="card p-4 sm:p-5">
                         <h3 class="text-sm font-semibold text-white flex items-center gap-2 mb-4">
                             <i data-lucide="scissors" class="w-4 h-4 text-em-400"></i> Kapster Hari Ini
                         </h3>
                         <div class="space-y-2" id="barber-cards-container">
                             <p class="text-xs text-slate-500 py-4 text-center">Memuat data...</p>
+                        </div>
+                    </div>
+
+                    <!-- Antrean Kapster (kapster only — F-KAP-02) -->
+                    <div id="kapster-queue-panel" class="hidden card p-4 sm:p-5">
+                        <h3 class="text-sm font-semibold text-white flex items-center gap-2 mb-4">
+                            <i data-lucide="list-ordered" class="w-4 h-4 text-em-400"></i> Antrean Saya Hari Ini
+                            <span class="text-[10px] font-normal text-slate-500">(F-KAP-02)</span>
+                        </h3>
+                        <div class="space-y-2" id="kapster-queue-list">
+                            <p class="text-xs text-slate-500 py-4 text-center">Belum ada antrean ditugaskan hari ini.</p>
                         </div>
                     </div>
                 </section>
@@ -752,7 +787,13 @@ $currentUser = getCurrentUser();
                             <h2 class="text-lg font-bold text-white">Manajemen Antrean</h2>
                             <p class="text-xs text-slate-400 mt-0.5">Kelola antrean pelanggan hari ini secara real-time</p>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span id="queue-live-badge" class="hidden items-center gap-1.5 text-[10px] font-bold text-em-400 bg-em-500/10 border border-em-500/25 rounded-full px-2.5 py-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-em-400 animate-pulse inline-block"></span> LIVE
+                            </span>
+                            <button onclick="window.open('public/antrean/display.php','_blank')" class="btn-ghost text-xs" title="Buka layar display pelanggan">
+                                <i data-lucide="monitor" class="w-3.5 h-3.5"></i> Layar Display
+                            </button>
                             <button onclick="loadQueue()" class="btn-ghost text-xs">
                                 <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh
                             </button>
@@ -1068,10 +1109,10 @@ $currentUser = getCurrentUser();
                 </label>
                 <input type="password" id="user-password" placeholder="••••••••" class="input-field">
             </div>
-            <div><label class="block text-xs text-slate-400 mb-1.5 font-medium">Role Akses</label>
                 <select id="user-role" class="input-field">
+                    <option value="kasir">Kasir (POS & Transaksi)</option>
+                    <option value="kapster">Kapster (Tukang Cukur)</option>
                     <option value="owner">Owner (Akses Penuh)</option>
-                    <option value="cashier">Kasir (POS & Transaksi)</option>
                 </select></div>
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" onclick="closeModal('userModal')" class="btn-ghost text-xs">Batal</button>
@@ -1636,40 +1677,105 @@ $currentUser = getCurrentUser();
             const result = await res.json();
             if (!result.success) return;
             const data = result.data;
+            const isKapster = (data.mode === 'kapster');
 
-            document.getElementById('stat-customers').innerText  = data.summary.today_customers;
-            document.getElementById('stat-revenue').innerText    = formatRp(data.summary.today_gross_revenue);
-            document.getElementById('stat-commission').innerText = formatRp(data.summary.today_commission_payout);
-            document.getElementById('stat-net').innerText        = formatRp(data.summary.today_net_owner);
+            // ── Toggle UI elements berdasarkan role ──
+            const kpiFull    = document.getElementById('kpi-full');
+            const kpiKapster = document.getElementById('kpi-kapster');
+            const leaderboard = document.getElementById('barber-leaderboard');
+            const kapQueue   = document.getElementById('kapster-queue-panel');
+            const posBtn     = document.getElementById('btn-header-pos');
+            const chartSub   = document.getElementById('chart-subtitle');
+            const chartLeftLbl  = document.getElementById('chart-left-label');
+            const chartRightTxt = document.getElementById('chart-right-label-text');
 
-            const bc = document.getElementById('barber-cards-container');
-            if (!data.barber_performances.length) {
-                bc.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada aktivitas kapster hari ini.</p>`;
-            } else {
-                bc.innerHTML = data.barber_performances.map((b, i) => `
-                    <div class="flex items-center justify-between p-3 rounded-xl bg-bg-deep border border-em-900/20 hover:border-em-800/40 transition">
-                        <div class="flex items-center gap-3">
-                            <div class="relative">
-                                <div class="w-10 h-10 rounded-xl bg-em-800/40 border border-em-700/30 text-em-300 flex items-center justify-center font-bold text-sm">
-                                    ${b.name.substring(0,2).toUpperCase()}
+            if (isKapster) {
+                // Sembunyikan elemen yang tidak boleh dilihat kapster
+                if (kpiFull)    kpiFull.classList.add('hidden');
+                if (leaderboard) leaderboard.classList.add('hidden');
+                if (posBtn)     posBtn.classList.add('hidden');
+                // Tampilkan elemen kapster
+                if (kpiKapster) kpiKapster.classList.remove('hidden');
+                if (kapQueue)   kapQueue.classList.remove('hidden');
+                if (chartSub)   chartSub.textContent = 'Kinerja & komisi pribadi';
+                // Update label grafik untuk kapster
+                if (chartLeftLbl)  chartLeftLbl.innerHTML = '<span class="w-2 h-2 rounded-full bg-violet-400 inline-block"></span> Komisi Saya';
+                if (chartRightTxt) chartRightTxt.textContent = 'Layanan Dilayani';
+
+                // Isi stat kapster
+                document.getElementById('kap-stat-services').innerText  = data.summary.today_service_count;
+                document.getElementById('kap-stat-commission').innerText = formatRp(data.summary.today_my_commission);
+
+                // Isi antrean kapster (F-KAP-02)
+                const qEl = document.getElementById('kapster-queue-list');
+                if (!data.my_queue || !data.my_queue.length) {
+                    qEl.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">Belum ada antrean ditugaskan hari ini.</p>`;
+                } else {
+                    const statusMap = { waiting:'Menunggu', serving:'Dilayani', done:'Selesai', skipped:'Lewati' };
+                    const statusColor = { waiting:'text-amber-400 bg-amber-500/10 border-amber-500/20', serving:'text-em-400 bg-em-500/10 border-em-500/20', done:'text-slate-500 bg-slate-500/10 border-slate-500/20', skipped:'text-rose-400 bg-rose-500/10 border-rose-500/20' };
+                    qEl.innerHTML = data.my_queue.map(q => `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-bg-deep border border-em-900/20">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-em-800/40 text-em-300 font-black text-sm flex items-center justify-center">#${q.queue_number}</div>
+                                <div>
+                                    <p class="text-sm font-semibold text-white">${q.customer_name}</p>
+                                    <p class="text-xs text-slate-500">${q.service_name || q.service_note || 'Layanan umum'}</p>
                                 </div>
-                                ${i === 0 ? '<span class="absolute -top-1 -right-1 text-sm">👑</span>' : ''}
                             </div>
-                            <div>
-                                <p class="text-sm font-semibold text-white">${b.name}</p>
-                                <p class="text-xs text-slate-500">${b.service_count} layanan hari ini</p>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusColor[q.status] || ''}">${statusMap[q.status] || q.status}</span>
+                        </div>
+                    `).join('');
+                }
+
+                cachedDashboardCharts = data.charts;
+                renderAnalyticsCharts(true); // pass isKapster flag
+
+            } else {
+                // MODE FULL (owner / kasir)
+                if (kpiFull)    kpiFull.classList.remove('hidden');
+                if (kpiKapster) kpiKapster.classList.add('hidden');
+                if (leaderboard) leaderboard.classList.remove('hidden');
+                if (kapQueue)   kapQueue.classList.add('hidden');
+                if (posBtn)     posBtn.classList.remove('hidden');
+                if (chartSub)   chartSub.textContent = 'Omset & jumlah pelanggan';
+                if (chartLeftLbl) chartLeftLbl.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span> Omset Kotor <span class="w-2 h-2 rounded-full bg-em-400 inline-block ml-1"></span> Bersih Owner';
+                if (chartRightTxt) chartRightTxt.textContent = 'Volume Pelanggan';
+
+                document.getElementById('stat-customers').innerText  = data.summary.today_customers;
+                document.getElementById('stat-revenue').innerText    = formatRp(data.summary.today_gross_revenue);
+                document.getElementById('stat-commission').innerText = formatRp(data.summary.today_commission_payout);
+                document.getElementById('stat-net').innerText        = formatRp(data.summary.today_net_owner);
+
+                const bc = document.getElementById('barber-cards-container');
+                if (!data.barber_performances.length) {
+                    bc.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Belum ada aktivitas kapster hari ini.</p>`;
+                } else {
+                    bc.innerHTML = data.barber_performances.map((b, i) => `
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-bg-deep border border-em-900/20 hover:border-em-800/40 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="relative">
+                                    <div class="w-10 h-10 rounded-xl bg-em-800/40 border border-em-700/30 text-em-300 flex items-center justify-center font-bold text-sm">
+                                        ${b.name.substring(0,2).toUpperCase()}
+                                    </div>
+                                    ${i === 0 ? '<span class="absolute -top-1 -right-1 text-sm">👑</span>' : ''}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-white">${b.name}</p>
+                                    <p class="text-xs text-slate-500">${b.service_count} layanan hari ini</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-slate-500 uppercase font-semibold">Komisi</p>
+                                <p class="text-sm font-bold text-violet-400">${formatRp(b.total_commission)}</p>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-[10px] text-slate-500 uppercase font-semibold">Komisi</p>
-                            <p class="text-sm font-bold text-violet-400">${formatRp(b.total_commission)}</p>
-                        </div>
-                    </div>
-                `).join('');
+                    `).join('');
+                }
+
+                cachedDashboardCharts = data.charts;
+                renderAnalyticsCharts(false);
             }
 
-            cachedDashboardCharts = data.charts;
-            renderAnalyticsCharts();
             lucide.createIcons();
         } catch (e) { console.error('Dashboard error:', e); }
     }
@@ -1685,16 +1791,26 @@ $currentUser = getCurrentUser();
                 btn.className = 'px-3 py-1.5 rounded-lg text-[11px] font-semibold transition text-slate-500 hover:text-slate-200';
             }
         });
-        renderAnalyticsCharts();
+        // Pertahankan mode kapster/full saat ganti periode
+        const isKapster = currentUser?.role === 'kapster';
+        renderAnalyticsCharts(isKapster);
     }
 
-    function renderAnalyticsCharts() {
+    function renderAnalyticsCharts(isKapster = false) {
         if (!cachedDashboardCharts) return;
         const d = cachedDashboardCharts[currentChartPeriod] || [];
-        const labels   = d.map(x => x.label);
-        const gross    = d.map(x => parseFloat(x.gross_revenue || 0));
-        const net      = d.map(x => parseFloat(x.net_owner    || 0));
-        const custs    = d.map(x => parseInt(x.total_customers|| 0));
+        const labels = d.map(x => x.label);
+
+        // Dataset berbeda tergantung role
+        const leftData  = isKapster
+            ? d.map(x => parseFloat(x.my_commission || 0))
+            : d.map(x => parseFloat(x.gross_revenue || 0));
+        const leftData2 = isKapster
+            ? null  // kapster tidak ada dataset kedua di kiri
+            : d.map(x => parseFloat(x.net_owner || 0));
+        const rightData = isKapster
+            ? d.map(x => parseInt(x.service_count || 0))
+            : d.map(x => parseInt(x.total_customers || 0));
 
         const CHART_OPTS = {
             responsive: true,
@@ -1716,44 +1832,55 @@ $currentUser = getCurrentUser();
             }
         };
 
-        // Revenue chart
+        // Revenue / Komisi chart (kiri)
         const ctxR = document.getElementById('revenueChartCanvas').getContext('2d');
         if (revenueChartInstance) revenueChartInstance.destroy();
+
         const gGold = ctxR.createLinearGradient(0,0,0,200);
         gGold.addColorStop(0,'rgba(245,158,11,0.85)');
         gGold.addColorStop(1,'rgba(217,119,6,0.15)');
+        const gViolet = ctxR.createLinearGradient(0,0,0,200);
+        gViolet.addColorStop(0,'rgba(139,92,246,0.85)');
+        gViolet.addColorStop(1,'rgba(109,40,217,0.12)');
         const gEm = ctxR.createLinearGradient(0,0,0,200);
         gEm.addColorStop(0,'rgba(16,185,129,0.85)');
         gEm.addColorStop(1,'rgba(5,150,105,0.12)');
 
+        const leftDatasets = isKapster
+            ? [{ label: 'Komisi Saya', data: leftData, backgroundColor: gViolet, borderColor: '#8b5cf6', borderWidth: 1.5, borderRadius: 6, borderSkipped: false }]
+            : [
+                { label: 'Omset Kotor', data: leftData,  backgroundColor: gGold,   borderColor: '#f59e0b', borderWidth: 1.5, borderRadius: 6, borderSkipped: false },
+                { label: 'Bersih Owner', data: leftData2, backgroundColor: gEm,     borderColor: '#10b981', borderWidth: 1.5, borderRadius: 6, borderSkipped: false }
+              ];
+
         revenueChartInstance = new Chart(ctxR, {
             type: 'bar',
-            data: { labels, datasets: [
-                { label: 'Omset Kotor', data: gross, backgroundColor: gGold, borderColor: '#f59e0b', borderWidth: 1.5, borderRadius: 6, borderSkipped: false },
-                { label: 'Bersih Owner', data: net,   backgroundColor: gEm,   borderColor: '#10b981', borderWidth: 1.5, borderRadius: 6, borderSkipped: false }
-            ]},
+            data: { labels, datasets: leftDatasets },
             options: { ...CHART_OPTS, plugins: { ...CHART_OPTS.plugins, tooltip: { ...CHART_OPTS.plugins.tooltip, callbacks: { label: c => ' ' + c.dataset.label + ': ' + formatRp(c.raw) } } } }
         });
 
-        // Customer chart
+        // Pelanggan / Layanan chart (kanan)
         const ctxC = document.getElementById('customerChartCanvas').getContext('2d');
         if (customerChartInstance) customerChartInstance.destroy();
         const gCyan = ctxC.createLinearGradient(0,0,0,200);
         gCyan.addColorStop(0,'rgba(56,189,248,0.35)');
         gCyan.addColorStop(1,'rgba(56,189,248,0.0)');
+        const rightLabel = isKapster ? 'Layanan' : 'Pelanggan';
 
         customerChartInstance = new Chart(ctxC, {
             type: 'line',
             data: { labels, datasets: [{
-                label: 'Pelanggan', data: custs,
+                label: rightLabel, data: rightData,
                 borderColor: '#38bdf8', backgroundColor: gCyan,
                 borderWidth: 2.5, tension: 0.4, fill: true,
                 pointBackgroundColor: '#38bdf8', pointBorderColor: '#07100d',
                 pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
             }]},
-            options: { ...CHART_OPTS, scales: { ...CHART_OPTS.scales, y: { ...CHART_OPTS.scales.y, beginAtZero: true, ticks: { ...CHART_OPTS.scales.y.ticks, precision: 0 } } }, plugins: { ...CHART_OPTS.plugins, tooltip: { ...CHART_OPTS.plugins.tooltip, callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.raw + ' customer' } } } }
+            options: { ...CHART_OPTS, scales: { ...CHART_OPTS.scales, y: { ...CHART_OPTS.scales.y, beginAtZero: true, ticks: { ...CHART_OPTS.scales.y.ticks, precision: 0 } } }, plugins: { ...CHART_OPTS.plugins, tooltip: { ...CHART_OPTS.plugins.tooltip, callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.raw } } } }
         });
     }
+
+
 
     // ── Transactions ──
     async function loadTransactions() {
@@ -1774,7 +1901,7 @@ $currentUser = getCurrentUser();
                         <td class="px-4 py-3 font-mono font-semibold text-em-400">${t.transaction_code}</td>
                         <td class="px-4 py-3 text-slate-400">${t.created_at}</td>
                         <td class="px-4 py-3 text-slate-300">${t.cashier_name || '-'}</td>
-                        <td class="px-4 py-3 text-slate-300">${(t.barbers || []).join(', ') || '-'}</td>
+                        <td class="px-4 py-3 text-slate-300">${t.barbers_involved || '-'}</td>
                         <td class="px-4 py-3"><span class="font-bold uppercase ${mc}">${t.payment_method}</span></td>
                         <td class="px-4 py-3 text-right text-slate-300">${formatRp(t.subtotal || t.total_amount)}</td>
                         <td class="px-4 py-3 text-right text-rose-400">${t.discount_amount > 0 ? '- '+formatRp(t.discount_amount) : '-'}</td>
@@ -2050,7 +2177,7 @@ $currentUser = getCurrentUser();
                     <td class="px-4 py-3 font-medium text-slate-200">${u.name}</td>
                     <td class="px-4 py-3 text-slate-400 text-xs font-mono">${u.email}</td>
                     <td class="px-4 py-3">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'owner' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'bg-em-500/10 text-em-400 border border-em-600/25'}">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'owner' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : (u.role === 'kapster' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/25' : 'bg-em-500/10 text-em-400 border border-em-600/25')}">
                             ${u.role.toUpperCase()}
                         </span>
                     </td>
@@ -2074,7 +2201,8 @@ $currentUser = getCurrentUser();
         document.getElementById('user-name').value     = u ? u.name : '';
         document.getElementById('user-email').value    = u ? u.email : '';
         document.getElementById('user-password').value = '';
-        document.getElementById('user-role').value     = u ? u.role : 'cashier';
+        const roleVal = u ? (u.role === 'cashier' ? 'kasir' : u.role) : 'kasir';
+        document.getElementById('user-role').value     = roleVal;
         document.getElementById('pwd-help').style.display = u ? '' : 'none';
         openModal('userModal');
         lucide.createIcons();
@@ -2097,15 +2225,38 @@ $currentUser = getCurrentUser();
         });
         const result = await res.json();
         if (result.success) {
-            if (id && parseInt(id) === currentUser?.id) {
+            const updatedId = parseInt(id);
+            const isSelf = id && updatedId === currentUser?.id;
+
+            if (isSelf) {
+                // Akun sendiri: update state lokal & UI header langsung
                 currentUser.name  = result.data?.name  || currentUser.name;
                 currentUser.email = result.data?.email || currentUser.email;
                 currentUser.role  = result.data?.role  || currentUser.role;
                 updateUserUI();
+            } else {
+                // Akun orang lain (kasir/kapster): sinkronisasi session dari server
+                // agar jika kasir tersebut masih login, server session sudah diperbarui
+                try {
+                    await fetch('api/auth.php?action=me');
+                } catch (_) {}
             }
+
             closeModal('userModal');
             loadUsersCRUD();
-            showToast('Data akun berhasil disimpan.', 'success');
+
+            // Refresh tabel riwayat transaksi agar cashier_name tampil dengan nama terbaru
+            if (typeof loadTransactions === 'function') loadTransactions();
+
+            // Refresh dashboard greeting jika akun sendiri
+            if (isSelf) updateClock();
+
+            showToast(
+                isSelf
+                    ? 'Profil Anda berhasil diperbarui.'
+                    : `Akun "${payload.name}" berhasil diperbarui & tersinkronisasi.`,
+                'success'
+            );
         } else {
             showToast(result.message || 'Gagal menyimpan akun.', 'error');
         }
@@ -2158,9 +2309,16 @@ $currentUser = getCurrentUser();
     }
 
     // ── Queue Management ──
-    let cachedQueueData = [];
+    let cachedQueueData  = [];
+    let loadQueueDebounce = null;
 
     async function loadQueue() {
+        // Debounce: prevent multiple concurrent calls (e.g. from SSE + manual refresh)
+        clearTimeout(loadQueueDebounce);
+        loadQueueDebounce = setTimeout(_doLoadQueue, 120);
+    }
+
+    async function _doLoadQueue() {
         const container = document.getElementById('queue-list-container');
         if (!container) return;
         try {
@@ -2346,6 +2504,9 @@ $currentUser = getCurrentUser();
 
     async function updateQueueStatus(id, status) {
         try {
+            // Visual feedback: disable all queue action buttons while processing
+            document.querySelectorAll('#queue-list-container button').forEach(b => b.disabled = true);
+
             const res = await fetch('api/queue.php', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -2353,14 +2514,43 @@ $currentUser = getCurrentUser();
             });
             const result = await res.json();
             if (result.success) {
-                showToast('Status antrean diperbarui.', 'success');
+                if (status === 'serving') {
+                    showToast('📣 Antrean dipanggil! Layar display diperbarui.', 'success');
+                    playKasirBeep();
+                } else if (status === 'done') {
+                    showToast('✅ Antrean selesai.', 'success');
+                } else if (status === 'skipped') {
+                    showToast('⏭️ Antrean dilewati.', 'success');
+                } else {
+                    showToast('Status antrean diperbarui.', 'success');
+                }
                 loadQueue();
             } else {
                 showToast(result.message || 'Gagal mengubah status antrean.', 'error');
             }
         } catch (err) {
             showToast('Gagal mengubah status antrean.', 'error');
+        } finally {
+            document.querySelectorAll('#queue-list-container button').forEach(b => b.disabled = false);
         }
+    }
+
+    // ── Kasir subtle beep saat Panggil ──
+    function playKasirBeep() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            [{ f:660, t:0, d:0.12 }, { f:880, t:0.1, d:0.18 }].forEach(n => {
+                const osc = ctx.createOscillator();
+                const g   = ctx.createGain();
+                osc.connect(g); g.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(n.f, ctx.currentTime + n.t);
+                g.gain.setValueAtTime(0.25, ctx.currentTime + n.t);
+                g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + n.t + n.d);
+                osc.start(ctx.currentTime + n.t);
+                osc.stop(ctx.currentTime + n.t + n.d + 0.05);
+            });
+        } catch(e) {}
     }
 
     async function deleteQueue(id) {
@@ -2856,8 +3046,92 @@ $currentUser = getCurrentUser();
         if (currentUser) {
             await loadCatalogs();
             loadDashboard();
+            startQueueSSE(); // mulai SSE real-time sync antrean
         }
     });
+
+    // ── Queue SSE: sinkronisasi real-time kasir ──────────────────
+    let queueSSE        = null;
+    let queueSSERetry   = null;
+    let queueSSEActive  = false;
+
+    function startQueueSSE() {
+        if (queueSSE) return; // sudah berjalan
+        queueSSEActive = true;
+        _connectQueueSSE();
+    }
+
+    function stopQueueSSE() {
+        queueSSEActive = false;
+        if (queueSSE) { queueSSE.close(); queueSSE = null; }
+        clearTimeout(queueSSERetry);
+        setQueueLiveBadge(false);
+    }
+
+    function setQueueLiveBadge(on) {
+        const badge = document.getElementById('queue-live-badge');
+        if (!badge) return;
+        badge.style.display = on ? 'inline-flex' : 'none';
+        badge.classList.toggle('hidden', !on);
+    }
+
+    function _connectQueueSSE() {
+        if (!queueSSEActive) return;
+        queueSSE = new EventSource('api/queue-events.php');
+
+        queueSSE.addEventListener('connected', () => {
+            setQueueLiveBadge(true);
+        });
+
+        queueSSE.addEventListener('queue_update', e => {
+            // Hanya refresh jika tab antrean sedang aktif
+            const queueTab = document.getElementById('view-queue');
+            if (queueTab && queueTab.classList.contains('active')) {
+                try {
+                    const data = JSON.parse(e.data);
+                    // Update stats langsung tanpa re-fetch
+                    const s = data.stats || {};
+                    const wEl = document.getElementById('q-stat-waiting');
+                    const sEl = document.getElementById('q-stat-serving');
+                    const dEl = document.getElementById('q-stat-done');
+                    const kEl = document.getElementById('q-stat-skipped');
+                    if (wEl) wEl.innerText = s.waiting ?? 0;
+                    if (sEl) sEl.innerText = s.serving ?? 0;
+                    if (dEl) dEl.innerText = s.done    ?? 0;
+                    if (kEl) kEl.innerText = s.skipped ?? 0;
+                    // Re-render full queue list
+                    loadQueue();
+                } catch(err) {}
+            }
+        });
+
+        queueSSE.addEventListener('queue_called', e => {
+            // Tampilkan toast notifikasi di halaman kasir
+            try {
+                const d = JSON.parse(e.data);
+                const queueTab = document.getElementById('view-queue');
+                if (queueTab && queueTab.classList.contains('active')) {
+                    showToast(`📣 #${String(d.queue_number).padStart(2,'0')} — ${d.customer_name} dipanggil ke kursi`, 'success');
+                }
+            } catch(err) {}
+        });
+
+        queueSSE.addEventListener('close', () => {
+            setQueueLiveBadge(false);
+            queueSSE.close(); queueSSE = null;
+            if (queueSSEActive) {
+                queueSSERetry = setTimeout(_connectQueueSSE, 3000);
+            }
+        });
+
+        queueSSE.addEventListener('error', () => {
+            setQueueLiveBadge(false);
+            if (queueSSE) { queueSSE.close(); queueSSE = null; }
+            if (queueSSEActive) {
+                queueSSERetry = setTimeout(_connectQueueSSE, 5000);
+            }
+        });
+    }
 </script>
 </body>
 </html>

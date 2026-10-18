@@ -80,7 +80,12 @@ if ($method === 'PUT') {
     $allowed = ['waiting', 'serving', 'done', 'skipped'];
     if (!in_array($status, $allowed)) sendJsonResponse(false, 'Status tidak valid.', null, 400);
 
-    $db->prepare("UPDATE queue SET status = ? WHERE id = ?")->execute([$status, $id]);
+    if ($status === 'serving') {
+        // Increment call_event_id to trigger display page sound + update
+        $db->prepare("UPDATE queue SET status = ?, call_event_id = IFNULL(call_event_id, 0) + 1 WHERE id = ?")->execute([$status, $id]);
+    } else {
+        $db->prepare("UPDATE queue SET status = ? WHERE id = ?")->execute([$status, $id]);
+    }
     sendJsonResponse(true, 'Status antrean diperbarui.');
 }
 
